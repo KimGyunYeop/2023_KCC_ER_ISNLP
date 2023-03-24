@@ -19,8 +19,44 @@ def parse_args():
         help="text encoder model path"
     )
     parser.add_argument(
-        "--result_path", type=str, default=None,
-        help="text encoder model path"
+        "--result_path", type=str, default="test",
+        help="result_path"
+    )
+    parser.add_argument(
+        "--batch_size", type=int, default=32,
+        help="batch_size"
+    )
+    parser.add_argument(
+        "--gpu", type=int, default=0,
+        help="batch_size"
+    )
+    parser.add_argument(
+        "--text_encoder_path", type=str, default="klue/roberta-base",
+        help="text_encoder_path"
+    )
+    parser.add_argument(
+        "--lr", type=float, default=0.0001,
+        help="data path"
+    )
+    parser.add_argument(
+        "--eps", type=float, default=0.001,
+        help="data path"
+    )
+    parser.add_argument(
+        "--epoch", type=int, default=30,
+        help="epoch"
+    )
+    parser.add_argument(
+        "--ignore_text", default=False, action='store_true',
+        help="ignore_text"
+    )
+    parser.add_argument(
+        "--ignore_audio", default=False, action='store_true',
+        help="ignore_audio"
+    )
+    parser.add_argument(
+        "--ignore_bio", default=False, action='store_true',
+        help="ignore_bio"
     )
     args = parser.parse_args()
     return args
