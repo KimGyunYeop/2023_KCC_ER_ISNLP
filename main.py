@@ -57,6 +57,8 @@ for E in range(args.epoch):
         
         # for x in i:
         #     print(x)
+        #     print(x.shape)
+        
         
         i = [x.to(device) if x is not None else None for x in i]
                 
