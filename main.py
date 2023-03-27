@@ -98,9 +98,9 @@ for E in range(args.epoch):
         summary_dict["max acc"] = test_acc
         summary_dict["max epoch"] = E
     
-    json.dump(result_dict, open(os.path.join("result.json", "w")))
+    json.dump(result_dict, open(os.path.join(args.result_path, "result.json"), "w"))
 
-json.dump(summary_dict, open(os.path.join("result_summary.json", "w")))
+json.dump(summary_dict, open(os.path.join(args.result_path, "result_summary.json"), "w"))
             
             
 
