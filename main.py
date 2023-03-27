@@ -23,7 +23,7 @@ args.label = ['happy', 'fear', 'surprise', 'angry', 'neutral', 'sad', 'disqust']
 args.result_path = os.path.join("results", args.result_path)
 if os.path.exists(args.result_path):
     print("already path exist!!")
-    input()
+    quit()
 
 os.makedirs(args.result_path, exist_ok=True)
 
@@ -82,7 +82,7 @@ for E in range(args.epoch):
             i = [x.to(device) if x is not None else None for x in i]
             pred = model(i[0], i[1], i[2], i[3])
         
-            acc = torch.sum((torch.argmax(pred, dim=-1) == i[-1].view(-1))) / i[0].size()[0]
+            acc = torch.sum((torch.argmax(pred, dim=-1) == i[-1].view(-1))) / i[-1].size()[0]
             
             # print(acc)
             test_acc_list.append(acc.item())
