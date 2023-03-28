@@ -13,6 +13,8 @@ import torchaudio.transforms as AT
 from torchvision.transforms.functional import to_pil_image
 from torchvision import transforms as VT
 
+from collections import Counter
+
 class TextAudioBioDataset(Dataset):
     def __init__(self, args, start_index, end_index, tokenizer) -> None:
         super(TextAudioBioDataset, self).__init__()
@@ -56,6 +58,7 @@ class TextAudioBioDataset(Dataset):
         self.annotations = pd.concat(self.annotations).reset_index(drop=True)
         print(self.annotations)
         print(len(self.annotations))
+        print(Counter(self.annotations["Total Evaluation"]))
         
         if not args.ignore_bio:
             self.eda_dict = {}
@@ -152,7 +155,7 @@ class TextAudioBioDataset(Dataset):
         if self.args.ignore_bio:
             bio_feature=None
         else:
-            bio_feature = torch.LongTensor([batch[2] for batch in batchs])
+            bio_feature = torch.Tensor([batch[2] for batch in batchs])
         
         
         labels = torch.LongTensor([batch[-1] for batch in batchs])

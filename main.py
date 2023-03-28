@@ -15,6 +15,8 @@ from tqdm import tqdm
 import json
 import os
 
+from collections import Counter
+
 fix_seed()
 args = parse_args()
 device = "cuda:"+str(args.gpu)
@@ -49,15 +51,19 @@ summary_dict = {}
 summary_dict["max epoch"] = -1
 summary_dict["max acc"] = 0
 
+data_check = True
+
 for E in range(args.epoch):
     model.train()
     train_loss_list = []
     for i in tqdm(train_dataloader):
         optimizer.zero_grad()
         
-        # for x in i:
-        #     print(x)
-        #     print(x.shape)
+        if data_check:
+            for x in i:
+                print("data check")
+                print(x)
+            data_check = False
         
         
         i = [x.to(device) if x is not None else None for x in i]
@@ -76,6 +82,8 @@ for E in range(args.epoch):
         
     
     test_acc_list = []
+    label_count = []
+    pred_count = []
     with torch.no_grad():
         model.eval()
         for i in tqdm(eval_dataloader):
@@ -83,24 +91,30 @@ for E in range(args.epoch):
             pred = model(i[0], i[1], i[2], i[3])
         
             acc = torch.sum((torch.argmax(pred, dim=-1) == i[-1].view(-1))) / i[-1].size()[0]
+            label_count.extend(i[-1].reshape(-1).tolist())
+            pred_count.extend(torch.argmax(pred, dim=-1).reshape(-1).tolist())
             
             # print(acc)
             test_acc_list.append(acc.item())
         
     test_acc = sum(test_acc_list)/len(test_acc_list)
     print("test acc in epoch {}: {}".format(E, test_acc))
+    print("label_count = ",Counter(label_count))
+    print("pred_count = ",Counter(pred_count))
     
     result_dict[E] = {}
     result_dict[E]["train loss"] = train_loss
     result_dict[E]["test acc"] = test_acc
+    result_dict[E]["label_count"] = Counter(label_count)
+    result_dict[E]["pred_count"] = Counter(pred_count)
     
     if test_acc > summary_dict["max acc"]:
         summary_dict["max acc"] = test_acc
         summary_dict["max epoch"] = E
     
-    json.dump(result_dict, open(os.path.join(args.result_path, "result.json"), "w"))
+    json.dump(result_dict, open(os.path.join(args.result_path, "result.json"), "w"), indent=2)
 
-json.dump(summary_dict, open(os.path.join(args.result_path, "result_summary.json"), "w"))
+json.dump(summary_dict, open(os.path.join(args.result_path, "result_summary.json"), "w"), indent=2)
             
             
 

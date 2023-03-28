@@ -28,7 +28,7 @@ class TextAudioBioModel(nn.Module):
         self.bio_haed4 = nn.Linear(64, 32)
         self.bio_haed_list = [self.bio_haed1, self.bio_haed2, self.bio_haed3, self.bio_haed4]
         
-        self.bio_classificaiton_haed = nn.Linear(64, len(args.label))
+        self.bio_classificaiton_haed = nn.Linear(32, len(args.label))
         
         
     def forward(self, input_ids, attention_masks, mel_image, bio_feature):
