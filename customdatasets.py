@@ -16,7 +16,7 @@ from torchvision import transforms as VT
 from collections import Counter
 
 class TextAudioBioDataset(Dataset):
-    def __init__(self, args, start_index, end_index, tokenizer) -> None:
+    def __init__(self, args, start_index, end_index, tokenizer, wav2vec_fe=None) -> None:
         super(TextAudioBioDataset, self).__init__()
         self.args = args
         self.label = args.label
@@ -38,6 +38,7 @@ class TextAudioBioDataset(Dataset):
             self.session_list = self.session_list[start_index:end_index]
             
         self.tokenizer = tokenizer
+        self.wav2vec_fe =wav2vec_fe
         self.defalut_columns=["turn","WAV_start","WAV_end","Segment ID","Total Evaluation","Valence","Arousal", "session_id", "text"]
         self.annotations = []
         
@@ -56,6 +57,8 @@ class TextAudioBioDataset(Dataset):
             
             
         self.annotations = pd.concat(self.annotations).reset_index(drop=True)
+        self.annotations["pred"]=""
+        self.annotations["correct"]=""
         print(self.annotations)
         print(len(self.annotations))
         print(Counter(self.annotations["Total Evaluation"]))
@@ -106,16 +109,17 @@ class TextAudioBioDataset(Dataset):
         # print(text)
         session_id = data_annotation["session_id"]
         segment_id = data_annotation["Segment ID"]
-        audio, sr = torchaudio.load(os.path.join(self.wav_path, "Session{}".format(session_id),"{}.wav".format(segment_id)))
+        audio = torchaudio.load(os.path.join(self.wav_path, "Session{}".format(session_id),"{}.wav".format(segment_id)))
         # print(audio.shape)
         # print(sr)
         
         # plt.plot(audio[0,:])
         # plt.savefig("tmp.png")
         
-        mel_audio = AT.MFCC(sample_rate=sr)(audio)
-        # print(mel_audio.shape)
-        mel_audio = self.resize_image(mel_audio)
+        if not self.args.wav2vec:
+            audio = AT.MFCC(sample_rate=audio[1])(audio[0])
+            # print(mel_audio.shape)
+            audio = self.resize_image(audio)
         # print(mel_audio)
         # print(mel_audio.shape)
         
@@ -135,7 +139,7 @@ class TextAudioBioDataset(Dataset):
                     bio_feature.append(0)
         
         
-        return text, mel_audio, bio_feature, label
+        return text, audio, bio_feature, data_annotation, label
     
     def collate_fn(self, batchs):
         if self.args.ignore_text:
@@ -148,16 +152,26 @@ class TextAudioBioDataset(Dataset):
             attention_mask=tokens.attention_mask
         
         if self.args.ignore_audio:
-            mel_audio=None
+            audios=None
         else:
-            mel_audio = torch.stack([batch[1] for batch in batchs], dim=0)
+            if self.args.wav2vec:
+                # print(batchs[0][1][1])
+                # print([batch[1][1] for batch in batchs])
+                # print([batch[1][0] for batch in batchs])
+                # for i in [batch[1][0] for batch in batchs]:
+                #     print(i.shape)
+                audios = self.wav2vec_fe([batch[1][0].squeeze().tolist() for batch in batchs], sampling_rate = batchs[0][1][1], return_tensors="pt", padding="longest")["input_values"]
+                # print(audios)
+                # print(audios.shape)
+            else:
+                audios = torch.stack([batch[1] for batch in batchs], dim=0)
         
         if self.args.ignore_bio:
             bio_feature=None
         else:
             bio_feature = torch.Tensor([batch[2] for batch in batchs])
         
-        
+        data = pd.concat([batch[-2] for batch in batchs],axis=1).T
         labels = torch.LongTensor([batch[-1] for batch in batchs])
         
-        return input_ids, attention_mask, mel_audio, bio_feature, labels
+        return input_ids, attention_mask, audios, bio_feature, data, labels

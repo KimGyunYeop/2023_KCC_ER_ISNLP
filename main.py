@@ -2,7 +2,7 @@ from customdatasets import TextAudioBioDataset
 from models import TextAudioBioModel
 from utils import parse_args, fix_seed
 
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, Wav2Vec2FeatureExtractor
 from transformers import BertModel
 
 from torch.utils.data import DataLoader
@@ -12,6 +12,7 @@ import torch
 
 from tqdm import tqdm
 
+import pandas as pd
 import json
 import os
 
@@ -21,18 +22,26 @@ fix_seed()
 args = parse_args()
 device = "cuda:"+str(args.gpu)
 args.label = ['happy', 'fear', 'surprise', 'angry', 'neutral', 'sad', 'disqust']
+id2label = dict(zip(range(len(args.label)), args.label))
 
 args.result_path = os.path.join("results", args.result_path)
-if os.path.exists(args.result_path):
-    print("already path exist!!")
-    quit()
+if args.dev:
+    args.result_path="test"
+else:
+    if os.path.exists(args.result_path):
+        print("already path exist!!")
+        quit()
 
 os.makedirs(args.result_path, exist_ok=True)
+os.makedirs(os.path.join(args.result_path,"pred"), exist_ok=True)
 
 tokenizer = AutoTokenizer.from_pretrained(args.text_encoder_path)
+fe=None
+if args.wav2vec:
+    fe = Wav2Vec2FeatureExtractor.from_pretrained(args.audio_encoder_path)
 
-train_dataset = TextAudioBioDataset(args, None, 30, tokenizer)
-eval_dataset = TextAudioBioDataset(args, 30, None, tokenizer)
+train_dataset = TextAudioBioDataset(args, None, 30, tokenizer, fe)
+eval_dataset = TextAudioBioDataset(args, 30, None, tokenizer, fe)
 
 train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, collate_fn=train_dataset.collate_fn)
 eval_dataloader = DataLoader(eval_dataset, batch_size=args.batch_size, collate_fn=train_dataset.collate_fn)
@@ -66,7 +75,7 @@ for E in range(args.epoch):
             data_check = False
         
         
-        i = [x.to(device) if x is not None else None for x in i]
+        i = [x.to(device) if torch.is_tensor(x) else x for x in i]
                 
         pred = model(i[0], i[1], i[2], i[3])
         loss = lf(pred, i[-1])
@@ -84,18 +93,25 @@ for E in range(args.epoch):
     test_acc_list = []
     label_count = []
     pred_count = []
+    result_df = []
     with torch.no_grad():
         model.eval()
         for i in tqdm(eval_dataloader):
-            i = [x.to(device) if x is not None else None for x in i]
+            i = [x.to(device) if torch.is_tensor(x) else x for x in i]
+            
             pred = model(i[0], i[1], i[2], i[3])
-        
-            acc = torch.sum((torch.argmax(pred, dim=-1) == i[-1].view(-1))) / i[-1].size()[0]
+            
+            pred_label = torch.argmax(pred, dim=-1)
+            acc = torch.sum(pred_label == i[-1].view(-1)) / i[-1].size()[0]
             label_count.extend(i[-1].reshape(-1).tolist())
-            pred_count.extend(torch.argmax(pred, dim=-1).reshape(-1).tolist())
+            pred_count.extend(pred_label.reshape(-1).tolist())
+            
+            i[-2]["pred"] = list(map(lambda x: id2label[x], pred_label.reshape(-1).tolist()))
+            i[-2]["correct"] = (pred_label == i[-1].view(-1)).tolist()
             
             # print(acc)
             test_acc_list.append(acc.item())
+            result_df.append(i[-2])
         
     test_acc = sum(test_acc_list)/len(test_acc_list)
     print("test acc in epoch {}: {}".format(E, test_acc))
@@ -113,6 +129,9 @@ for E in range(args.epoch):
         summary_dict["max epoch"] = E
     
     json.dump(result_dict, open(os.path.join(args.result_path, "result.json"), "w"), indent=2)
+    
+    result_df = pd.concat(result_df)
+    result_df.to_csv(os.path.join(args.result_path,"pred", "predict_{}.csv".format(str(E))))
 
 json.dump(summary_dict, open(os.path.join(args.result_path, "result_summary.json"), "w"), indent=2)
             

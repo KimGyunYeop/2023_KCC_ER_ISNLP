@@ -23,7 +23,7 @@ def parse_args():
         help="result_path"
     )
     parser.add_argument(
-        "--batch_size", type=int, default=32,
+        "--batch_size", type=int, default=16,
         help="batch_size"
     )
     parser.add_argument(
@@ -33,6 +33,10 @@ def parse_args():
     parser.add_argument(
         "--text_encoder_path", type=str, default="klue/roberta-base",
         help="text_encoder_path"
+    )
+    parser.add_argument(
+        "--audio_encoder_path", type=str, default="facebook/wav2vec2-base",
+        help="audio_encoder_path"
     )
     parser.add_argument(
         "--lr", type=float, default=0.0001,
@@ -57,6 +61,14 @@ def parse_args():
     parser.add_argument(
         "--ignore_bio", default=False, action='store_true',
         help="ignore_bio"
+    )
+    parser.add_argument(
+        "--wav2vec", default=False, action='store_true',
+        help="wave2vec"
+    )
+    parser.add_argument(
+        "--dev", default=False, action='store_true',
+        help="wave2vec"
     )
     args = parser.parse_args()
     return args
