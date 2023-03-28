@@ -39,7 +39,7 @@ def parse_args():
         help="audio_encoder_path"
     )
     parser.add_argument(
-        "--lr", type=float, default=0.0001,
+        "--lr", type=float, default=0.00005,
         help="data path"
     )
     parser.add_argument(
