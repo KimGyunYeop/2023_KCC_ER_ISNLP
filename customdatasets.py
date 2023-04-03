@@ -116,7 +116,7 @@ class TextAudioBioDataset(Dataset):
         # plt.plot(audio[0,:])
         # plt.savefig("tmp.png")
         
-        if not self.args.wav2vec:
+        if not self.args.image_transformer:
             audio = AT.MFCC(sample_rate=audio[1])(audio[0])
             # print(mel_audio.shape)
             audio = self.resize_image(audio)
@@ -154,13 +154,20 @@ class TextAudioBioDataset(Dataset):
         if self.args.ignore_audio:
             audios=None
         else:
-            if self.args.wav2vec:
+            if self.args.image_transformer:
                 # print(batchs[0][1][1])
                 # print([batch[1][1] for batch in batchs])
                 # print([batch[1][0] for batch in batchs])
                 # for i in [batch[1][0] for batch in batchs]:
                 #     print(i.shape)
-                audios = self.wav2vec_fe([batch[1][0].squeeze().tolist() for batch in batchs], sampling_rate = batchs[0][1][1], return_tensors="pt", padding="longest")["input_values"]
+                
+                if self.args.image_model.lower() == "whisper":
+                    audios = self.wav2vec_fe([batch[1][0].squeeze().tolist() for batch in batchs], sampling_rate = batchs[0][1][1], return_tensors="pt")
+                    audios = audios.input_features
+                else:
+                    audios = self.wav2vec_fe([batch[1][0].squeeze().tolist() for batch in batchs], sampling_rate = batchs[0][1][1], return_tensors="pt", padding="longest")
+                    audios = audios["input_values"]
+               
                 # print(audios)
                 # print(audios.shape)
             else:

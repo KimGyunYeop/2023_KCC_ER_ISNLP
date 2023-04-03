@@ -2,39 +2,43 @@
 
 # python -u main.py\
 #     --result_path "wav2vec_text_audio_bio" \
-#     --wav2vec
+#     --image_transformer
 
 python -u main.py\
-    --result_path "wav2vec_text_audio" \
+    --result_path "wavLM_text_audio" \
     --ignore_bio \
-    --wav2vec \
-    --gpu 1
+    --image_transformer \
+    --image_model wavLM \
+    --gpu 1 \
+    --batch_size 2
 
 python -u main.py\
-    --result_path "wav2vec_audio" \
+    --result_path "wavLM_audio" \
     --ignore_text \
     --ignore_bio \
-    --wav2vec \
-    --gpu 1
+    --image_transformer \
+    --image_model wavLM \
+    --gpu 1 \
+    --batch_size 2
 
 # python -u main.py\
 #     --result_path "baseline_text" \
 #     --ignore_audio \
 #     --ignore_bio \
-#     --wav2vec
+#     --image_transformer
 
 # python -u main.py\
 #     --result_path "baseline_bio" \
 #     --ignore_text \
 #     --ignore_audio  \
-#     --wav2vec
+#     --image_transformer
 
 # python -u main.py\
 #     --result_path "baseline_text_bio" \
 #     --ignore_audio  \
-#     --wav2vec
+#     --image_transformer
     
 # python -u main.py\
 #     --result_path "wav2vec_audio_bio" \
 #     --ignore_text  \
-#     --wav2vec
+#     --image_transformer

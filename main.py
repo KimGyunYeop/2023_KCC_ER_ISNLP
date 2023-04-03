@@ -2,7 +2,7 @@ from customdatasets import TextAudioBioDataset
 from models import TextAudioBioModel
 from utils import parse_args, fix_seed
 
-from transformers import AutoTokenizer, Wav2Vec2FeatureExtractor
+from transformers import AutoTokenizer, AutoFeatureExtractor
 from transformers import BertModel
 
 from torch.utils.data import DataLoader
@@ -18,15 +18,24 @@ import os
 
 from collections import Counter
 
+imageModel2imagePath = {
+    "wav2vec":"facebook/wav2vec2-base", 
+    "wavlm":"microsoft/wavlm-base", 
+    "whisper":"openai/whisper-base"
+}
+
 fix_seed()
 args = parse_args()
 device = "cuda:"+str(args.gpu)
 args.label = ['happy', 'fear', 'surprise', 'angry', 'neutral', 'sad', 'disqust']
 id2label = dict(zip(range(len(args.label)), args.label))
 
+args.audio_encoder_path = imageModel2imagePath[args.image_model.lower()]
+print("model path : ", args.audio_encoder_path)
+
 args.result_path = os.path.join("results", args.result_path)
 if args.dev:
-    args.result_path="test"
+    args.result_path="results/test"
 else:
     if os.path.exists(args.result_path):
         print("already path exist!!")
@@ -37,8 +46,8 @@ os.makedirs(os.path.join(args.result_path,"pred"), exist_ok=True)
 
 tokenizer = AutoTokenizer.from_pretrained(args.text_encoder_path)
 fe=None
-if args.wav2vec:
-    fe = Wav2Vec2FeatureExtractor.from_pretrained(args.audio_encoder_path)
+if args.image_transformer:
+    fe = AutoFeatureExtractor.from_pretrained(args.audio_encoder_path)
 
 train_dataset = TextAudioBioDataset(args, None, 30, tokenizer, fe)
 eval_dataset = TextAudioBioDataset(args, 30, None, tokenizer, fe)

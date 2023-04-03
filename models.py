@@ -10,7 +10,7 @@ class TextAudioBioModel(nn.Module):
         self.text_encoder = AutoModel.from_pretrained(args.text_encoder_path)
         self.text_head = nn.Linear(768, len(args.label))
         
-        if args.wav2vec:
+        if args.image_transformer:
             self.wav2vec_model = AutoModel.from_pretrained(args.audio_encoder_path)
             self.projector = nn.Linear(768, 512)
             self.classifier = nn.Linear(512, len(args.label))
@@ -47,12 +47,14 @@ class TextAudioBioModel(nn.Module):
             result_prob.append(text_out)
             
         if mel_image is not None:
-            if self.args.wav2vec:
+            if self.args.image_transformer:
+                # print(self.wav2vec_model(mel_image))
                 mel_out = self.wav2vec_model(mel_image).last_hidden_state
                 # print(mel_out.shape)
                 mel_out = self.projector(mel_out).mean(dim=1)
                 # print(mel_out.shape)
                 mel_out = self.classifier(mel_out)
+                result_prob.append(mel_out)
                 # print(mel_out.shape)
             else:
                 batch_size = mel_image.size()[0]
@@ -78,6 +80,9 @@ class TextAudioBioModel(nn.Module):
             bio_out = self.bio_classificaiton_haed(bio_out)
             result_prob.append(bio_out)
             
+        # print(result_prob)
         result_prob = sum(result_prob)
+        # print(result_prob)
+        # print(result_prob.shape)
         
         return result_prob

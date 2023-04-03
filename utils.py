@@ -23,7 +23,7 @@ def parse_args():
         help="result_path"
     )
     parser.add_argument(
-        "--batch_size", type=int, default=16,
+        "--batch_size", type=int, default=8,
         help="batch_size"
     )
     parser.add_argument(
@@ -63,7 +63,11 @@ def parse_args():
         help="ignore_bio"
     )
     parser.add_argument(
-        "--wav2vec", default=False, action='store_true',
+        "--image_transformer", default=False, action='store_true',
+        help="wave2vec"
+    )
+    parser.add_argument(
+        "--image_model", type=str, default="wav2vec", choices=["wav2vec", "wavLM", "Whisper"],
         help="wave2vec"
     )
     parser.add_argument(
