@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 from transformers import AutoModel
@@ -86,3 +87,45 @@ class TextAudioBioModel(nn.Module):
         # print(result_prob.shape)
         
         return result_prob
+    
+
+class TextAudioRNNModel(nn.Module):
+    def __init__(self, args):
+        super(TextAudioRNNModel, self).__init__()
+        self.args = args
+        
+        self.text_encoder = AutoModel.from_pretrained(args.text_encoder_path)
+        self.wav2vec_model = AutoModel.from_pretrained(args.audio_encoder_path)
+        self.projector = nn.Linear(768, 768)
+        
+        self.rnn = nn.RNN(768*2, 768, batch_first=True)
+        self.classifier = nn.Linear(768, len(args.label))
+        
+        
+    def forward(self, input_ids, attention_masks, images, tmp=None):
+        # print(input_ids.shape)
+        # print(attention_masks.shape)
+        # print(images.shape)
+        
+        text_out = self.text_encoder(input_ids=input_ids, attention_mask=attention_masks).pooler_output
+        
+        # print(text_out.shape)
+            
+        # print(self.wav2vec_model(mel_image))
+        image_out = self.wav2vec_model(images).last_hidden_state
+        # print(mel_out.shape)
+        image_out = self.projector(image_out).mean(dim=1)
+            
+        # print(image_out.shape)
+        
+        out = torch.cat([text_out, image_out], dim=-1)
+        
+        out = out.reshape(-1, self.args.prev_turn + 1, 768*2)
+        # print(out.shape)
+        
+        out = self.rnn(out)[0]
+        # print(out.shape)
+        out = self.classifier(out[:,-1,:])
+        # print(out.shape)
+            
+        return out

@@ -167,7 +167,7 @@ class TextAudioBioDataset(Dataset):
                 else:
                     audios = self.wav2vec_fe([batch[1][0].squeeze().tolist() for batch in batchs], sampling_rate = batchs[0][1][1], return_tensors="pt", padding="longest")
                     audios = audios["input_values"]
-               
+
                 # print(audios)
                 # print(audios.shape)
             else:
@@ -182,3 +182,140 @@ class TextAudioBioDataset(Dataset):
         labels = torch.LongTensor([batch[-1] for batch in batchs])
         
         return input_ids, attention_mask, audios, bio_feature, data, labels
+    
+class TextAudioCumulDataset(Dataset):
+    def __init__(self, args, start_index, end_index, tokenizer, wav2vec_fe=None) -> None:
+        super(TextAudioCumulDataset, self).__init__()
+        self.args = args
+        self.label = args.label
+        self.label2id = dict(zip(self.label, range(len(self.label))))
+        
+        annotation_path = os.path.join(args.data_path, "annotation")
+        self.wav_path = os.path.join(args.data_path, "wav")
+        self.session_list = list(map(lambda x : re.sub(r'[^0-9]', '', x), os.listdir(annotation_path)))
+        
+        if start_index == None:
+            start_index = 0
+        
+        if end_index == None:
+            self.session_list = self.session_list[start_index:]
+        else:
+            self.session_list = self.session_list[start_index:end_index]
+            
+        self.tokenizer = tokenizer
+        self.wav2vec_fe =wav2vec_fe
+        self.defalut_columns=["turn","WAV_start","WAV_end","Segment ID","Total Evaluation","Valence","Arousal", "session_id", "text"]
+        self.annotations = []
+        
+        
+        for i in self.session_list:
+            data = pd.read_csv(os.path.join(annotation_path,"Sess{}_eval.csv".format(i)))
+            data = data.iloc[1:,:7]
+            data["session_id"] = i
+            # data["text"] = data["session_id"]
+            data["text"] = data["Segment ID"].apply(lambda x: open(os.path.join(self.wav_path, "Session{}".format(i),"{}.txt".format(x)), encoding="cp949").read()[:-1]) #-1은 마지막 \n 삭제
+            
+            data.columns = self.defalut_columns
+            self.annotations.append(data)
+        
+            # print(data)
+            
+            
+        self.annotations = pd.concat(self.annotations).reset_index(drop=True)
+        self.annotations["pred"]=""
+        self.annotations["correct"]=""
+        print(self.annotations)
+        print(len(self.annotations))
+        print(Counter(self.annotations["Total Evaluation"]))
+        
+        self.resize_image = VT.Resize((100,465))
+        
+    
+    def __len__(self):
+        return len(self.annotations)
+    
+    def __getitem__(self, index):
+        data_annotation = self.annotations.iloc[index,:]
+        
+        # print(data_annotation)
+        # print(set(";".join(list(self.annotations["Total Evaluation"])).split(";")))
+        text = data_annotation["text"]
+        # print(text)
+        session_id = data_annotation["session_id"]
+        segment_id = data_annotation["Segment ID"]
+        turn = data_annotation["turn"]
+        final_label = self.label2id[data_annotation["Total Evaluation"].split(";")[0]]
+        
+        texts = []
+        audios = []
+        labels = []
+        data_annotations = []
+        
+        
+        # print(index)
+        # print((0, int(turn), - self.args.prev_turn))
+        # print(data_annotation)
+        for e, i in enumerate(range(int(turn), int(turn)-self.args.prev_turn-1 , -1)):
+            if i <= 0:
+                text = ""
+                audio = (torch.Tensor([[0, 0]]), 16000)
+                data_annotation = None
+                label = -100
+            else:
+                data_annotation = self.annotations.iloc[index - e,:]
+                # print(index - e)
+                # print(data_annotation)
+                
+                # print(data_annotation)
+                # print(set(";".join(list(self.annotations["Total Evaluation"])).split(";")))
+                text = data_annotation["text"]
+                
+                # print(text)
+                session_id = data_annotation["session_id"]
+                segment_id = data_annotation["Segment ID"]
+                audio = torchaudio.load(os.path.join(self.wav_path, "Session{}".format(session_id),"{}.wav".format(segment_id)))
+                
+                label = self.label2id[data_annotation["Total Evaluation"].split(";")[0]]
+                
+            data_annotations.append(data_annotation)
+            texts.append(text)
+            audios.append(audio)
+            labels.append(label)
+        
+        labels = final_label
+        
+        return texts, audios, data_annotations, labels
+    
+    def collate_fn(self, batchs):
+        # print(batchs)
+        
+        texts = []
+        audios = []
+        for i in batchs:
+            texts.extend(i[0])
+            for j in i[1]:
+                audios.append(j[0].squeeze().tolist())
+                # print(j[0])
+        
+        # print(texts)
+        # print(audios)
+        tokens = self.tokenizer(text=texts, padding="longest", return_tensors="pt", max_length=256, truncation="longest_first")
+        input_ids=tokens.input_ids
+        attention_mask=tokens.attention_mask
+        # print(input_ids.shape)
+        # print(attention_mask.shape)
+        
+        # for i in audios:
+        #     print(i.shape)
+        audios = self.wav2vec_fe(audios, sampling_rate = 16000, return_tensors="pt", padding="longest")
+        audios = audios["input_values"]
+        # print(audios.shape)
+        
+        
+        # data = pd.concat([batch[-2] for batch in batchs],axis=1).T
+        data = None
+        labels = torch.LongTensor([batch[-1] for batch in batchs]).reshape(-1)
+        # print(labels.shape)
+        
+        
+        return input_ids, attention_mask, audios, data, labels

@@ -1,5 +1,5 @@
-from customdatasets import TextAudioBioDataset
-from models import TextAudioBioModel
+from customdatasets import TextAudioBioDataset, TextAudioCumulDataset
+from models import TextAudioBioModel, TextAudioRNNModel
 from utils import parse_args, fix_seed
 
 from transformers import AutoTokenizer, AutoFeatureExtractor
@@ -49,14 +49,20 @@ fe=None
 if args.image_transformer:
     fe = AutoFeatureExtractor.from_pretrained(args.audio_encoder_path)
 
-train_dataset = TextAudioBioDataset(args, None, 30, tokenizer, fe)
-eval_dataset = TextAudioBioDataset(args, 30, None, tokenizer, fe)
+if args.add_rnn_baseline:
+    fe = AutoFeatureExtractor.from_pretrained(args.audio_encoder_path)
+    train_dataset = TextAudioCumulDataset(args, None, 30, tokenizer, fe)
+    eval_dataset = TextAudioCumulDataset(args, 30, None, tokenizer, fe)
+    model = TextAudioRNNModel(args)
+else:
+    train_dataset = TextAudioBioDataset(args, None, 30, tokenizer, fe)
+    eval_dataset = TextAudioBioDataset(args, 30, None, tokenizer, fe)
+    model = TextAudioBioModel(args)
+
+model.to(device)
 
 train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, collate_fn=train_dataset.collate_fn)
 eval_dataloader = DataLoader(eval_dataset, batch_size=args.batch_size, collate_fn=train_dataset.collate_fn)
-
-model = TextAudioBioModel(args)
-model.to(device)
 
 optimizer = Adam(model.parameters(), lr=args.lr, eps=args.eps)
 

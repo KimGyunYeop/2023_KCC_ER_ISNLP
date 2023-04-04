@@ -23,7 +23,7 @@ def parse_args():
         help="result_path"
     )
     parser.add_argument(
-        "--batch_size", type=int, default=8,
+        "--batch_size", type=int, default=3,
         help="batch_size"
     )
     parser.add_argument(
@@ -49,6 +49,14 @@ def parse_args():
     parser.add_argument(
         "--epoch", type=int, default=30,
         help="epoch"
+    )
+    parser.add_argument(
+        "--prev_turn", type=int, default=2,
+        help="epoch"
+    )
+    parser.add_argument(
+        "--add_rnn_baseline", default=False, action='store_true',
+        help="ignore_text"
     )
     parser.add_argument(
         "--ignore_text", default=False, action='store_true',
