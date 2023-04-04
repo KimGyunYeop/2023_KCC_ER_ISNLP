@@ -100,6 +100,7 @@ for E in range(args.epoch):
         optimizer.step()
         
         train_loss_list.append(loss.item())
+      
         
     train_loss = sum(train_loss_list)/len(train_loss_list)
     print("train loss in epoch {}: {}".format(str(E), train_loss))
@@ -121,7 +122,10 @@ for E in range(args.epoch):
             label_count.extend(i[-1].reshape(-1).tolist())
             pred_count.extend(pred_label.reshape(-1).tolist())
             
-            i[-2]["pred"] = list(map(lambda x: id2label[x], pred_label.reshape(-1).tolist()))
+            # print(pred_label)
+            # print(id2label)
+            
+            i[-2]["pred"] = list(map(lambda x: id2label[x], pred_label.view(-1).tolist()))
             i[-2]["correct"] = (pred_label == i[-1].view(-1)).tolist()
             
             # print(acc)

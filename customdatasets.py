@@ -235,16 +235,16 @@ class TextAudioCumulDataset(Dataset):
         return len(self.annotations)
     
     def __getitem__(self, index):
-        data_annotation = self.annotations.iloc[index,:]
+        index_data_annotation = self.annotations.iloc[index,:]
         
         # print(data_annotation)
         # print(set(";".join(list(self.annotations["Total Evaluation"])).split(";")))
-        text = data_annotation["text"]
+        text = index_data_annotation["text"]
         # print(text)
-        session_id = data_annotation["session_id"]
-        segment_id = data_annotation["Segment ID"]
-        turn = data_annotation["turn"]
-        final_label = self.label2id[data_annotation["Total Evaluation"].split(";")[0]]
+        session_id = index_data_annotation["session_id"]
+        segment_id = index_data_annotation["Segment ID"]
+        turn = index_data_annotation["turn"]
+        final_label = self.label2id[index_data_annotation["Total Evaluation"].split(";")[0]]
         
         texts = []
         audios = []
@@ -284,7 +284,7 @@ class TextAudioCumulDataset(Dataset):
         
         labels = final_label
         
-        return texts, audios, data_annotations, labels
+        return texts, audios, index_data_annotation, labels
     
     def collate_fn(self, batchs):
         # print(batchs)
@@ -313,7 +313,7 @@ class TextAudioCumulDataset(Dataset):
         
         
         # data = pd.concat([batch[-2] for batch in batchs],axis=1).T
-        data = None
+        data = pd.concat([batch[-2] for batch in batchs],axis=1).T
         labels = torch.LongTensor([batch[-1] for batch in batchs]).reshape(-1)
         # print(labels.shape)
         
