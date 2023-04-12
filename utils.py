@@ -23,7 +23,7 @@ def parse_args():
         help="result_path"
     )
     parser.add_argument(
-        "--batch_size", type=int, default=3,
+        "--batch_size", type=int, default=8,
         help="batch_size"
     )
     parser.add_argument(
@@ -31,15 +31,15 @@ def parse_args():
         help="batch_size"
     )
     parser.add_argument(
-        "--text_encoder_path", type=str, default="klue/roberta-base",
+        "--text_encoder_path", type=str, default="paust/pko-t5-base",
         help="text_encoder_path"
     )
     parser.add_argument(
-        "--audio_encoder_path", type=str, default="facebook/wav2vec2-base",
+        "--audio_encoder_path", type=str, default="kresnik/wav2vec2-large-xlsr-korean",
         help="audio_encoder_path"
     )
     parser.add_argument(
-        "--lr", type=float, default=0.00005,
+        "--lr", type=float, default=0.00001,
         help="data path"
     )
     parser.add_argument(
@@ -51,32 +51,32 @@ def parse_args():
         help="epoch"
     )
     parser.add_argument(
-        "--prev_turn", type=int, default=2,
+        "--prev_turn", type=int, default=0,
         help="epoch"
     )
     parser.add_argument(
-        "--add_rnn_baseline", default=False, action='store_true',
+        "--T5CAModel", default=False, action='store_true',
         help="ignore_text"
     )
     parser.add_argument(
-        "--ignore_text", default=False, action='store_true',
+        "--CAEmbedding_num", type=int, default=0,
+        help="epoch"
+    )
+    parser.add_argument(
+        "--T5AEModel", default=False, action='store_true',
         help="ignore_text"
     )
     parser.add_argument(
-        "--ignore_audio", default=False, action='store_true',
-        help="ignore_audio"
+        "--AEEmbedding_num", type=int, default=1,
+        help="epoch"
     )
     parser.add_argument(
-        "--ignore_bio", default=False, action='store_true',
-        help="ignore_bio"
+        "--prev_turn_loss", default=False, action='store_true',
+        help="prev_turn_loss"
     )
     parser.add_argument(
-        "--image_transformer", default=False, action='store_true',
-        help="wave2vec"
-    )
-    parser.add_argument(
-        "--image_model", type=str, default="wav2vec", choices=["wav2vec", "wavLM", "Whisper"],
-        help="wave2vec"
+        "--d", type=float, default=1.0,
+        help="d"
     )
     parser.add_argument(
         "--dev", default=False, action='store_true',
