@@ -1,5 +1,4 @@
 import argparse
-from transformers.adapters import AutoAdapterModel
 
 import random
 import numpy as np

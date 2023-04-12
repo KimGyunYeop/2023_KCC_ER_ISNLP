@@ -2,7 +2,7 @@
 
 PREV_TURN=(2)
 CA_EMB_NUM=(10)
-GPU=2
+GPU=1
 
 for prev_turn in ${PREV_TURN[@]}; do
     for ca_emb_num in ${CA_EMB_NUM[@]}; do
