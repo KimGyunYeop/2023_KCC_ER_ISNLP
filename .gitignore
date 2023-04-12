@@ -7,3 +7,5 @@ test*
 *.out
 
 outputs*
+
+!*README.md
