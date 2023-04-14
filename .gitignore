@@ -9,7 +9,8 @@ test*
 
 outputs*
 
-! *README.md
+!results/README.md
+!datasets/README.md
 
 *copy*
 
