@@ -29,13 +29,13 @@ Audio Feature Encoder를 통해 추출한 Audio Feature를 Prompt learning의 �
 Baseline (T5-prompt)  
 
     python -u main.py \
-        --result_path {$result_path} 
+        --result_path {$result folder name} 
         
 
 Prompt with Audio Feature 
 
     python -u main.py\
-        --result_path {$result_path} \
+        --result_path {$result folder name} \
         --T5AFModel \
         --AF_num {$l} 
         
@@ -43,7 +43,7 @@ Prompt with Audio Feature
 Prompt with Previous Context
 
     python -u main.py\
-        --result_path {$result_path} \
+        --result_path {$result folder name} \
         --prev_turn_loss \
         --prev_turn {$k} \
         --d {$d}
@@ -52,7 +52,7 @@ Prompt with Previous Context
 Proposed model
 
     python -u main.py\
-        --result_path {$result_path} \
+        --result_path {$result folder name} \
         --prev_turn_loss \
         --prev_turn {$k} \
         --d {$d} \
