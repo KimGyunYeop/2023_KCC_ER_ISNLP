@@ -18,7 +18,6 @@ Audio Feature Encoder를 통해 추출한 Audio Feature를 Prompt learning의 �
     transformers
     pytorch
     torchaudio
-    torchvision
     matplotlib
     scikit-learn
     tqdm
