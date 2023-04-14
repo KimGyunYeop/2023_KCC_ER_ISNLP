@@ -62,11 +62,11 @@ def parse_args():
         help="epoch"
     )
     parser.add_argument(
-        "--T5AEModel", default=False, action='store_true',
+        "--T5AFModel", default=False, action='store_true',
         help="ignore_text"
     )
     parser.add_argument(
-        "--AEEmbedding_num", type=int, default=1,
+        "--AF_num", type=int, default=1,
         help="epoch"
     )
     parser.add_argument(
@@ -74,7 +74,7 @@ def parse_args():
         help="prev_turn_loss"
     )
     parser.add_argument(
-        "--d", type=float, default=1.0,
+        "--d", type=float, default=0.5,
         help="d"
     )
     parser.add_argument(

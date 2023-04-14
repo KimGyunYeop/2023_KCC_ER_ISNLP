@@ -10,3 +10,7 @@ test*
 outputs*
 
 !*README.md
+
+*copy*
+
+*.sh

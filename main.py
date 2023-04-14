@@ -1,5 +1,5 @@
-from customdatasets import T5TextAudioCumulDataset, TextAudioCumulDataset
-from models import T5TextModel, T5TextAudioCAModel, T5TextAudioAEModel
+from customdatasets import T5TextAudioCumulDataset
+from models import T5TextModel, T5TextAudioCAModel, T5TextAudioAFModel
 from utils import parse_args, fix_seed
 
 from transformers import AutoTokenizer, AutoFeatureExtractor
@@ -64,8 +64,8 @@ eval_dataset = T5TextAudioCumulDataset(args, 30, None, tokenizer, fe)
 
 if args.T5CAModel:
     model = T5TextAudioCAModel(args)
-elif args.T5AEModel:
-    model = T5TextAudioAEModel(args)
+elif args.T5AFModel:
+    model = T5TextAudioAFModel(args)
 else:
     model = T5TextModel(args)
 model.to(device)
@@ -105,7 +105,6 @@ for E in range(args.epoch):
                 print("data check")
                 print(x)
             data_check = False
-        
         
         data = [x.to(device) if torch.is_tensor(x) else x for x in data]
                 
