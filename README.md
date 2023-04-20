@@ -76,3 +76,4 @@ Proposed model
         
 ## Performance
 
+![2023_kcc_eq](<img width="952" alt="image" src="https://user-images.githubusercontent.com/64178197/233313211-9dbb4af4-848d-42ce-9005-48b3caa6e15b.png">)
